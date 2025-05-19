@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemstone Price Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            background: radial-gradient(ellipse at 50% 40%, #0fffc1 0%, #0a0f1a 60%, #05070a 100%);
+            min-height: 100vh;
+        }
+        .neon-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 40%, rgba(0,255,200,0.25) 0%, rgba(0,255,200,0.05) 40%, transparent 70%);
+            filter: blur(40px);
+        }
+        #gem-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .glass-effect {
+            background: rgba(20, 30, 40, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,255,200,0.15);
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .input-hover {
+            transition: all 0.3s ease;
+        }
+        .input-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px 0 rgba(0,255,200,0.15);
+        }
+        .input-focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,255,200,0.3);
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+    <script>
+        function func(event){
+            event.preventDefault()
+            var cut = document.getElementById('cut').value;
+            var carat = document.getElementById('carat').value;
+            var clarity = document.getElementById('clarity').value;
+            var table = document.getElementById('table').value;
+            var x = document.getElementById('x').value;
+            var y = document.getElementById('y').value;
+            var z = document.getElementById('z').value;
+            if(table && table>100){
+                table = 100
+            }
+            if (y === ""){
+                y = 0;
+            }
+            if(x===""){
+                x = 0;
+            }
+            if(z===""){
+                z = 0;
+            }
+            if(!table){
+                table = 0;
+            }
+            if(!carat){
+                carat = 0;
+            }
+            async function sendData(cut,carat,clarity,table,x,y,z) {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cut: cut,
+                        carat: carat,
+                        clarity: clarity,
+                        table: table,
+                        x: x,
+                        y: y,
+                        z: z
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data);
+            }
+            sendData(cut,carat,clarity,table,x,y,z)
+        }
+    </script>
+</head>
+<body>
+    <div class="neon-glow"></div>
+    <canvas id="gem-canvas"></canvas>
+    <div class="container mx-auto px-4 py-8 relative z-10">
+        <div class="max-w-2xl mx-auto">
+            <div class="text-center mb-12 floating">
+                <h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 mb-4 drop-shadow-[0_2px_20px_rgba(0,255,200,0.7)]">
+                    Gemstone Price Predictor
+                </h1>
+                <p class="text-cyan-100">Discover the value of your precious gem</p>
+            </div>
+            <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+                <form class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="input-hover">
+                            <label for="carat" class="block text-sm font-medium text-cyan-100 mb-2">Carat</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" id="carat" name="carat" required
+                                    class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100 placeholder-cyan-300">
+                                <span class="absolute right-3 top-3 text-cyan-400">ct</span>
+                            </div>
+                        </div>
+                        <div class="input-hover">
+                            <label for="cut" class="block text-sm font-medium text-cyan-100 mb-2">Cut</label>
+                            <select id="cut" name="cut" required
+                                class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100">
+                                <option value="Fair">Fair</option>
+                                <option value="Good">Good</option>
+                                <option value="Very Good">Very Good</option>
+                                <option value="Premium">Premium</option>
+                                <option value="Ideal">Ideal</option>
+                            </select>
+                        </div>
+                        <div class="input-hover">
+                            <label for="clarity" class="block text-sm font-medium text-cyan-100 mb-2">Clarity</label>
+                            <select id="clarity" name="clarity" required
+                                class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100">
+                                <option value="I1">I1</option>
+                                <option value="SI2">SI2</option>
+                                <option value="SI1">SI1</option>
+                                <option value="VS2">VS2</option>
+                                <option value="VS1">VS1</option>
+                                <option value="VVS2">VVS2</option>
+                                <option value="VVS1">VVS1</option>
+                                <option value="IF">IF</option>
+                            </select>
+                        </div>
+                        <div class="input-hover">
+                            <label for="table" class="block text-sm font-medium text-cyan-100 mb-2">Table</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" id="table" name="table" required
+                                    class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100 placeholder-cyan-300">
+                                <span class="absolute right-3 top-3 text-cyan-400">%</span>
+                            </div>
+                        </div>
+                        <div class="input-hover">
+                            <label for="x" class="block text-sm font-medium text-cyan-100 mb-2">X (Length)</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" id="x" name="x" required
+                                    class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100 placeholder-cyan-300">
+                                <span class="absolute right-3 top-3 text-cyan-400">mm</span>
+                            </div>
+                        </div>
+                        <div class="input-hover">
+                            <label for="y" class="block text-sm font-medium text-cyan-100 mb-2">Y (Width)</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" id="y" name="y" required
+                                    class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100 placeholder-cyan-300">
+                                <span class="absolute right-3 top-3 text-cyan-400">mm</span>
+                            </div>
+                        </div>
+                        <div class="input-hover">
+                            <label for="z" class="block text-sm font-medium text-cyan-100 mb-2">Z (Depth)</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" id="z" name="z" required
+                                    class="w-full px-4 py-3 rounded-xl border border-cyan-400 input-focus-ring transition duration-200 bg-white/10 text-cyan-100 placeholder-cyan-300">
+                                <span class="absolute right-3 top-3 text-cyan-400">mm</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center pt-4">
+                        <button onclick="func(event)" class="px-10 py-4 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-blue-600 transition duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_0_rgba(0,255,200,0.5)]">
+                            Predict Price
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="glass-effect rounded-2xl shadow-xl p-8 hidden">
+                <h2 class="text-2xl font-semibold text-center text-cyan-100 mb-4">Predicted Price</h2>
+                <div class="text-center">
+                    <p class="text-5xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 text-transparent bg-clip-text">$0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById('gem-canvas'),
+            alpha: true,
+            antialias: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        const geometry = new THREE.OctahedronGeometry(2, 1);
+        const material = new THREE.MeshPhysicalMaterial({
+            color: 0x00ffc1,
+            metalness: 0.6,
+            roughness: 0.05,
+            transmission: 1,
+            thickness: 1.2,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.05,
+            envMapIntensity: 2.0,
+            transparent: true,
+            opacity: 0.95,
+            ior: 1.6,
+            reflectivity: 1.0,
+            sheen: 1.0,
+            sheenColor: new THREE.Color(0x00fff0),
+            sheenRoughness: 0.2
+        });
+        const gem = new THREE.Mesh(geometry, material);
+        scene.add(gem);
+
+        const cubeTextureLoader = new THREE.CubeTextureLoader();
+        const envMap = cubeTextureLoader.load([
+            'https://threejs.org/examples/textures/cube/Bridge2/posx.jpg',
+            'https://threejs.org/examples/textures/cube/Bridge2/negx.jpg',
+            'https://threejs.org/examples/textures/cube/Bridge2/posy.jpg',
+            'https://threejs.org/examples/textures/cube/Bridge2/negy.jpg',
+            'https://threejs.org/examples/textures/cube/Bridge2/posz.jpg',
+            'https://threejs.org/examples/textures/cube/Bridge2/negz.jpg',
+        ]);
+        scene.environment = envMap;
+
+        // Neon lights
+        const ambientLight = new THREE.AmbientLight(0x00ffc1, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0x00ffc1, 2, 100);
+        pointLight1.position.set(5, 5, 10);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x00fff0, 1.5, 100);
+        pointLight2.position.set(-5, -5, -10);
+        scene.add(pointLight2);
+
+        const pointLight3 = new THREE.PointLight(0x00bfff, 1, 100);
+        pointLight3.position.set(0, 10, 0);
+        scene.add(pointLight3);
+
+        camera.position.z = 7;
+
+        renderer.render(scene, camera);
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.render(scene, camera);
+        });
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.enableZoom = false;
+        controls.autoRotate = false;
+        controls.addEventListener('change', () => renderer.render(scene, camera));
+    </script>
+</body>
+</html>
