@@ -107,7 +107,10 @@
                 });
 
                 const data = await response.json();
-                console.log(data);
+                
+                const element = document.getElementById('result');
+                element.innerText = "The Price of Your Gemstone is \u20B9"+data.ans;            
+
             }
             sendData(cut,carat,clarity,table,x,y,z)
         }
@@ -125,7 +128,7 @@
                 <p class="text-cyan-100">Discover the value of your precious gem</p>
             </div>
             <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
-                <form class="space-y-8">
+                <form class="space-y-8" onsubmit="func(event)">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="input-hover">
                             <label for="carat" class="block text-sm font-medium text-cyan-100 mb-2">Carat</label>
@@ -194,7 +197,7 @@
                         </div>
                     </div>
                     <div class="flex justify-center pt-4">
-                        <button onclick="func(event)" class="px-10 py-4 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-blue-600 transition duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_0_rgba(0,255,200,0.5)]">
+                        <button onsubmit="func(event)" type="submit" class="px-10 py-4 bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-blue-600 transition duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_0_rgba(0,255,200,0.5)]">
                             Predict Price
                         </button>
                     </div>
@@ -251,7 +254,6 @@
         ]);
         scene.environment = envMap;
 
-        // Neon lights
         const ambientLight = new THREE.AmbientLight(0x00ffc1, 0.5);
         scene.add(ambientLight);
 
@@ -285,5 +287,6 @@
         controls.autoRotate = false;
         controls.addEventListener('change', () => renderer.render(scene, camera));
     </script>
+    <p class="text-center text-cyan-200 mt-2 text-3xl font-semibold" id="result"></p>
 </body>
 </html>

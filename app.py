@@ -24,7 +24,8 @@ def predict1():
         except:
             pass
     k = predict(d['carat'],d['cut'],d['clarity'],d['table'],d['x'],d['y'],d['z'])
-    return jsonify({"ans":k}), 200
+    s = f'{k:.2f}'
+    return jsonify({"ans":s}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
